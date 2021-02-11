@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="styles.css">
+</head>
+  <body>
+<div id="outer">
+    <div class="input_row">
+      <label>url_service</label>
+      <input type="text" id="input_url_service" value="https://9iftbousfg.execute-api.eu-west-1.amazonaws.com/v5">
+    </div>
+	<div class="input_row">
+      <label>api_key</label>
+      <input type="text" id="input_api_key"  value="gwiYyfFrxeCYBZcu">
+    </div>
+	<div class="input_row">
+      <label>id_account</label>
+      <input type="text" id="input_id_account"  value="ac-demo">
+    </div>
+	<div class="input_row">
+      <label>id_encoder</label>
+	  <select name="cars" id="input_id_encoder">
+        <option value="en-segmentation-product-base">en-segmentation-product-base</option>
+        <option value="en-yolov3-full-coco-base">en-yolov3-full-coco-base</option>
+      </select>
+    </div>
+    <div class="input_row">
+      <label>url_image_custom</label>
+      <input type="text" id="input_url_image_custom"  value="">
+    </div>
+	<div class="input_row">
+      <label>url_image_example</label>
+	  <select name="cars" id="input_url_image_example">
+        <option value="https://assets.swappie.com/SwappieiPhone864gbharmaa-2-1-600x600.jpg">phone</option>
+        <option value="https://i.ytimg.com/vi/kIMry45NbEM/maxresdefault.jpg">people</option>
+      </select>
+    </div>
+	
+	
+    <div class="input_row">
+      <label>error_message</label>
+      <input type="text" id="input_error_message"  value="">
+    </div>
+	
+    <div class="input_row">
+      <button id="button_apply">Apply</button>
+    </div>
+   <div>
+      <img class="img_result" id="img_result" src="" />
+    </div>
+
+
+   </div>
+  </body>
+<script>
+  function encode_and_apply_annotation_for_url() {
+	url_service = document.getElementById("input_url_service").value
+    
+	api_key = document.getElementById("input_api_key").value
+	id_account = document.getElementById("input_id_account").value
+	id_encoder = document.getElementById("input_id_encoder").value
+	url_image = document.getElementById("input_url_image_custom").value
+	if (url_image == "") {
+		url_image = document.getElementById("input_url_image_example").value
+	}
+    var url_endpoint = url_service + '/encode_and_apply_annotation_for_url';
+	
+    xhr = new XMLHttpRequest();
+    xhr.open("POST", url_endpoint, true);
+    xhr.setRequestHeader('Access-Control-Allow-Origin', 'null');
+    xhr.setRequestHeader("Content-type", "application/json");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            var json = JSON.parse(xhr.responseText);
+			data = 'data:image/png;base64,' + json.result_strbase64
+			document.getElementById('img_result')
+				.setAttribute(
+					'src', data
+				);
+        }
+    }
+	var data = JSON.stringify({
+		"api_key":api_key,
+		"id_account":id_account,
+		"id_encoder":id_encoder,
+		"url":url_image
+	});
+    xhr.send(data);
+  }
+
+  document.getElementById("button_apply").onclick = encode_and_apply_annotation_for_url;
+</script>
+</html>

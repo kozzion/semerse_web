@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="outer">
+        <input type="hidden" id="hidden_state" value="">
+        <div class="input_row">
+            <label>url_service</label>
+            <input type="text" id="input_url_service" value="https://9iftbousfg.execute-api.eu-west-1.amazonaws.com/v5">
+        </div>
+        <div class="input_row">
+            <label>api_key</label>
+            <input type="text" id="input_api_key"  value="XXXX">
+        </div>
+        <div class="input_row">
+            <label>id_account</label>
+            <input type="text" id="input_id_account"  value="ac-demo">
+        </div>
+        <div class="input_row">
+            <label>id_index</label>
+            <select id="input_id_index">
+                <option value="id-json-netflixmovie">id-json-netflixmovie</option>
+            </select>
+        </div>
+        <div class="input_row">
+            <label>id_subject</label>
+            <input type="text" id="input_id_subject"  value="su-demo">
+        </div>
+        <div class="input_row">
+            <label>id_rater</label>
+            <input type="text" id="input_id_rater"  value="ra-demo">
+        </div>
+        <div class="input_row">
+            <label>id_instancegroup_image</label>
+            <input type="text" id="input_id_instancegroup_image"  value="ig-image-netflixmovie">
+        </div>
+        <div class="input_row">
+            <label>id_instancegroup_desciption</label>
+            <input type="text" id="input_id_instancegroup_desciption"  value="ig-json-netflixmovie">
+        </div>
+        <div class="input_row">
+            <label>id_instance</label>
+            <input type="text" id="input_id_instance"  value="">
+        </div>
+        <div class="input_row">
+            <label>error_message</label>
+            <input type="text" id="input_error_message"  value="">
+        </div>
+        <div class="input_row">
+            <label>is_loading</label>
+            <input type="text" id="input_is_loading"  value="True">
+        </div>
+        
+        <div class="input_row">
+            <button class="list_title" id="button_browse_random">Browse</button>
+            <button class="list_title" id="button_search">Search</button>
+            <button class="list_title" id="button_skip">Skip</button>
+        </div>
+        <div>
+            <img class="img_result" id="img_result" src="" />
+            <label class="description" id="label_result">description</label>
+        </div>
+        <div class="input_row">
+            <button class="list_title" id="button_consu_pos">Seen and liked</button>
+            <button class="list_title" id="button_nocon_pos">Want to see</button>
+            <button class="list_title" id="button_unk">Ignore</button>
+            <button class="list_title" id="button_nocon_neg">Not intrested</button>
+            <button class="list_title" id="button_consu_neg">Seen and disliked</button>
+        </div>
+        
+        <div class="input_row">
+            <select class="list_title" id="select_list_consu_pos" size=10>
+            </select>
+            <select class="list_title" id="select_list_nocon_pos" size=10>
+            </select>
+            <select class="list_title" id="select_list_unk" size=10>
+            </select>
+            <select class="list_title" id="select_list_nocon_neg" size=10>
+            </select>
+            <select class="list_title" id="select_list_consu_neg" size=10>
+            </select>
+        </div>
+        <div>
+            <select id="select_list_recommend" size=10>
+            </select>
+        </div>
+    </div>
+</body>
+<script>
+    function select_clear(element_select) {
+        var index, L = element_select.options.length - 1;
+        for(index = L; index >= 0; index--) {
+            element_select.remove(index);
+        }
+    }
+
+    function select_set(element_select, list_value, list_text) {
+        select_clear(element_select)
+        for (let index = 0; index < list_value.length; index++) {
+            var option = document.createElement("option");
+            option.value = list_value[index];
+            option.text = list_text[index];
+            element_select.add(option);
+        }
+    }
+
+    function show_state() {
+        state = load_state()
+        show_list(state, "select_list_consu_pos", state.list_consu_pos)
+        show_list(state, "select_list_nocon_pos", state.list_nocon_pos)
+        show_list(state, "select_list_unk", state.list_unk)
+        show_list(state, "select_list_nocon_neg", state.list_nocon_neg)
+        show_list(state, "select_list_consu_neg", state.list_consu_neg)
+        show_list(state, "select_list_recommend", state.list_id_recommend)
+        id_instance = document.getElementById("input_id_instance").value
+        if (id_instance != "") {
+            set_id_instance(id_instance)
+        }
+    }    
+
+    function show_list(state, id_element_select, list_id_instance) {
+        state = load_state()
+        element_select = document.getElementById(id_element_select)
+        list_value = []
+        list_text = []
+        for (let index = 0; index < list_id_instance.length; index++) {
+            id_instance = list_id_instance[index]
+            list_value.push(id_instance)
+            list_text.push(state.dict_json[id_instance].str_title)
+            
+        }
+        select_set(element_select, list_value, list_text)
+    }
+
+    function load_state() {
+        state_string = document.getElementById("hidden_state").value
+        return JSON.parse(state_string)
+    }
+
+    function save_state(state) {
+        if(state == undefined)
+            throw ""
+        state_string = JSON.stringify(state)
+        document.getElementById("hidden_state").value = state_string
+    }
+
+    function preload_preference_response(xhr) {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            console.log(xhr.responseText)
+            var list_preference = JSON.parse(xhr.responseText);
+            console.log(list_preference)
+            
+
+            document.getElementById("input_is_loading").value = "False"
+        }
+    }
+
+    function preload_json_response(xhr) {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            var list_json = JSON.parse(xhr.responseText);
+            dict_json = {}
+            for (let index = 0; index < list_json.length; index++) {
+                json_movie = list_json[index]
+                id_instance = json_movie.id_instance
+                dict_json[id_instance] = json_movie
+            }
+            state = load_state()
+            state.dict_json = dict_json
+            save_state(state)
+
+            url_service = document.getElementById("input_url_service").value
+            api_key = document.getElementById("input_api_key").value
+            id_account = document.getElementById("input_id_account").value
+            id_subject = document.getElementById("input_id_subject").value
+            id_rater = document.getElementById("input_id_rater").value
+
+            var url_endpoint = url_service + '/preference_load';
+            
+            xhr_preference_load = new XMLHttpRequest();
+            xhr_preference_load.open("POST", url_endpoint, true);
+            xhr_preference_load.setRequestHeader("Content-type", "application/json");
+            xhr_preference_load.onreadystatechange = function () {
+                preload_preference_response(xhr_preference_load)   
+            }
+
+            var data = JSON.stringify({
+                "api_key":api_key,
+                "id_account":id_account,
+                "id_subject":id_subject,
+                "id_rater":id_rater});
+            xhr_preference_load.send(data);
+
+      
+        }    
+    }
+
+    function preload() {
+        //initialize state
+        state = {}
+        state.dict_json = {}
+        state.list_recommend = []
+        state.list_id_recommend = []
+        state.list_consu_pos = []
+        state.list_nocon_pos = []
+        state.list_unk = []
+        state.list_nocon_neg = []
+        state.list_consu_neg = []
+        save_state(state)
+
+        // preload all json 
+        // TODO use instead of lookup
+        id_instancegroup_desciption = document.getElementById("input_id_instancegroup_desciption").value
+        url_json = "https://semerse-dev-demo.s3-eu-west-1.amazonaws.com/ac-demo/instancegroupsummary/" + id_instancegroup_desciption + "/list_json.json"
+        xhr = new XMLHttpRequest();
+        xhr.open("GET", url_json, true);
+        xhr.setRequestHeader("Content-type", "application/json");
+        xhr.onreadystatechange = function () {
+            preload_json_response(xhr)   
+        }
+        xhr.send();
+    }
+
+    function set_id_instance(id_instance) {
+        document.getElementById("input_id_instance").value = id_instance
+
+        id_instancegroup_image = document.getElementById("input_id_instancegroup_image").value
+        id_instancegroup_desciption = document.getElementById("input_id_instancegroup_desciption").value
+        
+        url_image = "https://semerse-dev-demo.s3-eu-west-1.amazonaws.com/ac-demo/instancegroup/" + id_instancegroup_image + "/" + id_instance + ".jpg"
+        document.getElementById("img_result").src = url_image
+
+        url_json = "https://semerse-dev-demo.s3-eu-west-1.amazonaws.com/ac-demo/instancegroup/" + id_instancegroup_desciption + "/" + id_instance
+        xhr = new XMLHttpRequest();
+        xhr.open("GET", url_json, true);
+        xhr.setRequestHeader("Content-type", "application/json");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var json = JSON.parse(xhr.responseText);
+                
+                data = 'data:image/png;base64,' + json.result_strbase64
+                text_result = json.str_title
+                text_result += " (" + json.str_date_released.substring(0, 4)  + ")"
+                text_result += "<br /> runtime: " + json.int_runtime  + " min"
+                if (json.has_flt_imdb_rating){
+                    text_result += "<br /> IMDB rating: " + json.flt_imdb_rating
+                } else {
+                    text_result += "<br /> IMDB rating: N/A"
+                }
+                text_result += "<br />" + json.str_description
+                document.getElementById("label_result").innerHTML  = text_result
+            }
+        }
+        xhr.send();
+    }
+
+
+
+    function browse_random() {	
+        url_service = document.getElementById("input_url_service").value
+        api_key = document.getElementById("input_api_key").value
+        id_account = document.getElementById("input_id_account").value
+        id_index = document.getElementById("input_id_index").value
+        id_subject = document.getElementById("input_id_subject").value
+        id_rater = document.getElementById("input_id_rater").value
+        mode = "random"
+        count_recommend = 10
+        count_search = 10
+        
+        var url_endpoint = url_service + '/recommend';
+        xhr = new XMLHttpRequest();
+        xhr.open("POST", url_endpoint, true);
+        xhr.setRequestHeader("Content-type", "application/json");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var json_response = JSON.parse(xhr.responseText);
+
+                state = load_state()
+                state.list_recommend = json_response.list_result
+                list_id_recommend = []
+                for (let index = 0; index < state.list_recommend.length; index++) {
+                    list_id_recommend.push(state.list_recommend[index].id_annotation.split(":")[1])
+                }
+                state.list_id_recommend = list_id_recommend
+                save_state(state)
+                show_state()
+
+                id_instance = json_response.list_result[0].id_annotation.split(":")[1]
+                set_id_instance(id_instance)
+            }
+            else{
+                if (xhr.readyState == 4 && xhr.status != 200) {
+                    console.log("error: " + xhr.status)
+                }
+            }
+        }
+
+        var data = JSON.stringify({
+            "api_key":api_key,
+            "id_account":id_account,
+            "id_index":id_index,
+            "id_subject":id_subject,
+            "id_rater":id_rater,
+            "mode":mode,
+            "count_recommend":count_recommend,
+            "count_search":count_search });
+        xhr.send(data);
+    }
+
+
+
+    function preference_save(value) {
+        
+        url_service = document.getElementById("input_url_service").value
+        api_key = document.getElementById("input_api_key").value
+        id_account = document.getElementById("input_id_account").value
+        id_subject = document.getElementById("input_id_subject").value
+        id_rater = document.getElementById("input_id_rater").value
+        id_instance = document.getElementById("input_id_instance").value
+        type_preference = "mediacontent"
+
+        var url_endpoint = url_service + '/preference_create';
+        xhr = new XMLHttpRequest();
+        xhr.open("POST", url_endpoint, true);
+        xhr.setRequestHeader("Content-type", "application/json");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                if (xhr.status == 200) {
+                    console.log("succes")
+                } else{
+                    console.log("error: " + xhr.status)
+                }
+            }
+        }
+        
+        
+        var data = JSON.stringify({
+            "api_key":api_key,
+            "id_account":id_account,
+            "id_subject":id_subject,
+            "id_rater":id_rater,
+            "id_instance":id_instance,
+            "type_preference":type_preference,
+            "value":value });
+        xhr.send(data);
+    }
+
+    function click_button_consu_pos(){
+        preference_save("consu_pos")
+        id_instance = document.getElementById("input_id_instance").value
+        state = load_state()
+        state.list_consu_pos.push(id_instance)
+        const index = state.list_id_recommend.indexOf(id_instance);
+        if (index > -1) {
+            state.list_id_recommend.splice(index, 1);
+            state.list_recommend.splice(index, 1);
+        }
+        if (0 < state.list_id_recommend.length)
+        {
+            document.getElementById("input_id_instance").value = state.list_id_recommend[0]
+        }
+        save_state(state)
+        show_state()
+    }
+    
+    function click_button_nocon_pos(){
+        preference_save("nocon_pos")
+        id_instance = document.getElementById("input_id_instance").value
+        state = load_state()
+        state.list_nocon_pos.push(id_instance)
+        const index = state.list_id_recommend.indexOf(id_instance);
+        if (index > -1) {
+            state.list_id_recommend.splice(index, 1);
+            state.list_recommend.splice(index, 1);
+        }
+        if (0 < state.list_id_recommend.length)
+        {
+            document.getElementById("input_id_instance").value = state.list_id_recommend[0]
+        }
+        save_state(state)
+        show_state()
+    }
+
+    function click_button_unk(){
+        preference_save("unk")
+        id_instance = document.getElementById("input_id_instance").value
+        state = load_state()
+        state.list_unk.push(id_instance)
+        const index = state.list_id_recommend.indexOf(id_instance);
+        if (index > -1) {
+            state.list_id_recommend.splice(index, 1);
+            state.list_recommend.splice(index, 1);
+        }
+        if (0 < state.list_id_recommend.length)
+        {
+            document.getElementById("input_id_instance").value = state.list_id_recommend[0]
+        }
+        save_state(state)
+        show_state()
+    }
+
+    function click_button_nocon_neg(){
+        preference_save("nocon_neg")
+        id_instance = document.getElementById("input_id_instance").value
+        state = load_state()
+        state.list_nocon_neg.push(id_instance)
+        const index = state.list_id_recommend.indexOf(id_instance);
+        if (index > -1) {
+            state.list_id_recommend.splice(index, 1);
+            state.list_recommend.splice(index, 1);
+        }
+        if (0 < state.list_id_recommend.length)
+        {
+            document.getElementById("input_id_instance").value = state.list_id_recommend[0]
+        }
+        save_state(state)
+        show_state()
+    }
+
+    function click_button_consu_neg(){
+        preference_save("consu_neg")
+        id_instance = document.getElementById("input_id_instance").value
+        state = load_state()
+        state.list_consu_neg.push(id_instance)
+
+        const index = state.list_id_recommend.indexOf(id_instance);
+        if (index > -1) {
+            state.list_id_recommend.splice(index, 1);
+            state.list_recommend.splice(index, 1);
+        }
+        if (0 < state.list_id_recommend.length)
+        {
+            document.getElementById("input_id_instance").value = state.list_id_recommend[0]
+        }
+        save_state(state)
+        show_state()
+    }
+
+
+
+    document.getElementById("button_browse_random").onclick = browse_random;
+    document.getElementById("button_consu_pos").onclick = click_button_consu_pos;
+    document.getElementById("button_nocon_pos").onclick = click_button_nocon_pos;
+    document.getElementById("button_unk").onclick = click_button_unk;
+    document.getElementById("button_nocon_neg").onclick = click_button_nocon_neg;
+    document.getElementById("button_consu_neg").onclick = click_button_consu_neg;
+    preload()
+    </script>
+</html>
